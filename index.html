@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaylee's Wardrobe</title>
+<style>
+  :root {
+    --bg: #0f0f0f; --card: #1a1a1a; --card2: #222; --border: #333;
+    --text: #e0e0e0; --text2: #888;
+    --accent: #c9a96e; --accent2: #a07d4a;
+    --danger: #e74c3c; --warn: #f39c12; --success: #2ecc71;
+    --info: #5dade2; --pink: #e091b0; --purple: #9b59b6;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  .header {
+    background:linear-gradient(135deg,#1a1a1a,#2a2020);
+    border-bottom:1px solid var(--accent); padding:20px 32px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .header h1 { font-size:24px; font-weight:300; letter-spacing:2px; }
+  .header h1 b { color:var(--accent); font-weight:600; }
+  .header-stats { display:flex; gap:24px; }
+  .stat { text-align:center; }
+  .stat-num { font-size:22px; font-weight:700; color:var(--accent); }
+  .stat-label { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; }
+
+  .tabs { display:flex; border-bottom:1px solid var(--border); background:var(--card); padding:0 24px; }
+  .tab { padding:14px 20px; cursor:pointer; font-size:13px; color:var(--text2); border-bottom:2px solid transparent; transition:all .2s; letter-spacing:.5px; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .tab .badge { background:var(--danger); color:#fff; font-size:10px; padding:1px 6px; border-radius:8px; margin-left:6px; }
+
+  .main { padding:24px 32px; max-width:1400px; margin:0 auto; }
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  .btn { padding:8px 16px; border:1px solid var(--border); border-radius:6px; background:var(--card2); color:var(--text); cursor:pointer; font-size:13px; transition:all .2s; }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-primary { background:var(--accent); color:#000; border-color:var(--accent); font-weight:600; }
+  .btn-primary:hover { background:var(--accent2); }
+  .btn-danger { border-color:var(--danger); color:var(--danger); }
+  .btn-danger:hover { background:var(--danger); color:#fff; }
+  .btn-sm { padding:4px 10px; font-size:11px; }
+
+  .form-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
+  .form-group label { display:block; font-size:11px; color:var(--text2); margin-bottom:4px; text-transform:uppercase; letter-spacing:.5px; }
+  .form-group input,.form-group select,.form-group textarea { width:100%; padding:8px 12px; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:13px; }
+  .form-group input:focus,.form-group select:focus { outline:none; border-color:var(--accent); }
+
+  .inv-controls { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+  .search-box { flex:1; min-width:200px; padding:8px 12px; background:var(--card); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:13px; }
+  .search-box:focus { outline:none; border-color:var(--accent); }
+  .filter-group { display:flex; gap:4px; flex-wrap:wrap; }
+  .filter-btn { padding:6px 12px; border:1px solid var(--border); border-radius:16px; background:transparent; color:var(--text2); cursor:pointer; font-size:11px; transition:all .2s; }
+  .filter-btn:hover,.filter-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(201,169,110,.1); }
+
+  .item-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .item-card { background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; transition:all .2s; }
+  .item-card:hover { border-color:var(--accent); }
+  .item-card .item-img { width:100%; height:180px; object-fit:cover; display:block; background:var(--card2); }
+  .item-card .item-img-placeholder { width:100%; height:100px; display:flex; align-items:center; justify-content:center; background:var(--card2); color:var(--text2); font-size:32px; }
+  .item-card .item-body { padding:12px; }
+  .item-card .item-name { font-size:15px; font-weight:600; }
+  .item-card .item-brand { font-size:12px; color:var(--accent); }
+  .item-card .item-meta { font-size:11px; color:var(--text2); margin-top:4px; }
+  .item-card .item-tags { display:flex; gap:4px; margin-top:8px; flex-wrap:wrap; }
+  .tag { padding:2px 8px; border-radius:10px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .tag-formal { background:rgba(93,173,226,.15); color:var(--info); }
+  .tag-gala { background:rgba(155,89,182,.15); color:var(--purple); }
+  .tag-casual { background:rgba(46,204,113,.15); color:var(--success); }
+  .tag-shoes { background:rgba(224,145,176,.15); color:var(--pink); }
+  .tag-acc { background:rgba(243,156,18,.15); color:var(--warn); }
+  .tag-small { background:rgba(231,76,60,.15); color:var(--danger); }
+  .tag-fit { background:rgba(46,204,113,.15); color:var(--success); }
+  .tag-wash { background:rgba(243,156,18,.2); color:var(--warn); border:1px solid rgba(243,156,18,.3); }
+  .tag-sell { background:rgba(231,76,60,.2); color:var(--danger); border:1px solid rgba(231,76,60,.3); }
+  .item-actions { display:flex; gap:6px; margin-top:10px; }
+  .item-card .last-worn { font-size:11px; color:var(--text2); margin-top:6px; }
+  .item-card .last-worn strong { color:var(--warn); }
+
+  .season-tabs { display:flex; gap:8px; margin-bottom:16px; }
+  .season-btn { padding:8px 20px; border:1px solid var(--border); border-radius:20px; background:transparent; color:var(--text2); cursor:pointer; font-size:13px; }
+  .season-btn.active { background:var(--accent); color:#000; border-color:var(--accent); font-weight:600; }
+  .week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:10px; }
+  .day-col { background:var(--card); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .day-header { background:var(--card2); padding:10px; text-align:center; font-size:13px; font-weight:600; border-bottom:1px solid var(--border); }
+  .day-header.today { background:var(--accent); color:#000; }
+  .day-slots { padding:8px; min-height:200px; }
+  .slot { padding:6px 8px; margin-bottom:6px; border-radius:6px; font-size:11px; cursor:pointer; border:1px dashed var(--border); color:var(--text2); text-align:center; transition:all .2s; }
+  .slot:hover { border-color:var(--accent); color:var(--accent); }
+  .slot.filled { border-style:solid; border-color:var(--border); color:var(--text); text-align:left; background:var(--card2); display:flex; align-items:center; gap:6px; }
+  .slot.filled .slot-thumb { width:28px; height:28px; border-radius:4px; object-fit:cover; flex-shrink:0; }
+  .slot.filled .slot-info { flex:1; min-width:0; }
+  .slot.filled .slot-name { font-weight:600; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .slot.filled .slot-brand { font-size:9px; color:var(--accent); }
+  .slot-remove { flex-shrink:0; cursor:pointer; color:var(--text2); font-size:14px; line-height:1; }
+  .slot-remove:hover { color:var(--danger); }
+  .slot-label { font-size:10px; color:var(--text2); margin-bottom:2px; text-transform:uppercase; }
+
+  .queue-section { margin-bottom:24px; }
+  .queue-section h3 { font-size:14px; font-weight:600; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+  .queue-section h3 .count { background:var(--accent); color:#000; padding:1px 8px; border-radius:10px; font-size:11px; }
+  .queue-list { display:flex; flex-direction:column; gap:8px; }
+  .queue-item { display:flex; align-items:center; justify-content:space-between; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:12px 16px; gap:12px; }
+  .queue-item-img { width:48px; height:48px; border-radius:6px; object-fit:cover; flex-shrink:0; }
+  .queue-item-info { flex:1; }
+  .queue-item-info .name { font-weight:600; font-size:14px; }
+  .queue-item-info .detail { font-size:11px; color:var(--text2); margin-top:2px; }
+
+  .sell-summary { background:linear-gradient(135deg,#2a1a1a,#1a1a2a); border:1px solid var(--danger); border-radius:8px; padding:20px; margin-bottom:20px; display:flex; justify-content:space-around; text-align:center; }
+  .sell-stat-num { font-size:28px; font-weight:700; color:var(--danger); }
+  .sell-stat-label { font-size:11px; color:var(--text2); }
+
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; justify-content:center; align-items:center; }
+  .modal-overlay.show { display:flex; }
+  .modal { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; width:90%; max-width:560px; max-height:85vh; overflow-y:auto; }
+  .modal h3 { margin-bottom:16px; font-size:18px; }
+  .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+
+  .picker-list { max-height:300px; overflow-y:auto; }
+  .picker-item { padding:10px 12px; border:1px solid var(--border); border-radius:6px; margin-bottom:6px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:10px; }
+  .picker-item:hover { border-color:var(--accent); background:rgba(201,169,110,.05); }
+  .picker-item .pi-thumb { width:36px; height:36px; border-radius:4px; object-fit:cover; flex-shrink:0; }
+  .picker-item .pi-name { font-weight:600; }
+  .picker-item .pi-detail { font-size:11px; color:var(--text2); }
+
+  /* Photo upload area */
+  .photo-upload { margin-bottom:16px; }
+  .photo-drop {
+    border:2px dashed var(--border); border-radius:8px; padding:20px;
+    text-align:center; cursor:pointer; transition:all .2s; position:relative;
+    min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .photo-drop:hover,.photo-drop.dragover { border-color:var(--accent); background:rgba(201,169,110,.05); }
+  .photo-drop .drop-icon { font-size:36px; margin-bottom:8px; }
+  .photo-drop .drop-text { font-size:13px; color:var(--text2); }
+  .photo-drop .drop-text2 { font-size:11px; color:var(--text2); margin-top:4px; }
+  .photo-preview { position:relative; display:none; }
+  .photo-preview img { max-width:100%; max-height:200px; border-radius:8px; display:block; margin:0 auto; }
+  .photo-preview .photo-remove { position:absolute; top:8px; right:8px; width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,.7); color:#fff; border:none; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
+  .photo-preview .photo-remove:hover { background:var(--danger); }
+
+  /* AI tag button */
+  .ai-tag-bar { display:flex; gap:8px; margin-bottom:16px; align-items:center; }
+  .ai-tag-bar .ai-status { font-size:12px; color:var(--text2); flex:1; }
+  .ai-tag-bar .ai-status.loading { color:var(--warn); }
+  .ai-tag-bar .ai-status.success { color:var(--success); }
+  .ai-tag-bar .ai-status.error { color:var(--danger); }
+  .btn-ai { background:linear-gradient(135deg,#9b59b6,#5dade2); color:#fff; border:none; font-weight:600; }
+  .btn-ai:hover { opacity:.85; color:#fff; }
+  .btn-ai:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-search { background:linear-gradient(135deg,#2ecc71,#5dade2); color:#fff; border:none; font-weight:600; }
+  .btn-search:hover { opacity:.85; color:#fff; }
+
+  /* Price search dropdown */
+  .search-dropdown { position:relative; display:inline-block; }
+  .search-menu {
+    display:none; position:absolute; bottom:100%; left:0; margin-bottom:4px;
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    padding:6px 0; min-width:200px; z-index:50; box-shadow:0 4px 20px rgba(0,0,0,.5);
+  }
+  .search-menu.show { display:block; }
+  .search-menu a {
+    display:block; padding:8px 14px; color:var(--text); text-decoration:none;
+    font-size:12px; transition:background .15s;
+  }
+  .search-menu a:hover { background:var(--card2); color:var(--accent); }
+  .search-menu .sm-label { padding:4px 14px; font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; }
+  .search-menu hr { border:none; border-top:1px solid var(--border); margin:4px 0; }
+
+  /* Settings */
+  .settings-section { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:16px; }
+  .settings-section h4 { font-size:14px; margin-bottom:12px; color:var(--accent); }
+  .api-key-input { width:100%; padding:8px 12px; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:13px; font-family:monospace; }
+  .api-key-input:focus { outline:none; border-color:var(--accent); }
+
+  .export-area textarea { width:100%; height:200px; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-family:monospace; font-size:12px; padding:12px; }
+
+  .empty-state { text-align:center; padding:60px 20px; color:var(--text2); }
+  .empty-state .icon { font-size:48px; margin-bottom:12px; }
+  .empty-state p { font-size:14px; margin-bottom:16px; }
+
+  .size-warning { background:rgba(231,76,60,.1); border:1px solid rgba(231,76,60,.3); border-radius:8px; padding:16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+  .size-warning .sw-icon { font-size:28px; }
+  .size-warning .sw-text { font-size:13px; }
+  .size-warning .sw-text strong { color:var(--danger); }
+
+  @media(max-width:900px) {
+    .week-grid { grid-template-columns:1fr; }
+    .header { flex-direction:column; gap:12px; }
+    .main { padding:16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><b>KAYLEE'S</b> WARDROBE</h1>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-num" id="totalCount">0</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num" id="activeCount">0</div><div class="stat-label">Active</div></div>
+    <div class="stat"><div class="stat-num" id="washCount">0</div><div class="stat-label">To Wash</div></div>
+    <div class="stat"><div class="stat-num" id="sellCount">0</div><div class="stat-label">To Sell</div></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="inventory">Inventory</div>
+  <div class="tab" data-tab="planner">Weekly Planner</div>
+  <div class="tab" data-tab="wash">Wash Queue <span class="badge" id="washBadge" style="display:none">0</span></div>
+  <div class="tab" data-tab="sell">Sell / Donate <span class="badge" id="sellBadge" style="display:none">0</span></div>
+  <div class="tab" data-tab="settings">Settings</div>
+</div>
+
+<div class="main">
+<!-- INVENTORY -->
+<div class="panel active" id="panel-inventory">
+  <div class="inv-controls">
+    <input class="search-box" id="searchBox" placeholder="Search by name, brand, color...">
+    <div class="filter-group">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="formal-top">Formal Top</button>
+      <button class="filter-btn" data-filter="formal-bottom">Formal Bottom</button>
+      <button class="filter-btn" data-filter="formal-set">Formal Set</button>
+      <button class="filter-btn" data-filter="gala-dress">Gala Dress</button>
+      <button class="filter-btn" data-filter="gala-top">Gala Top</button>
+      <button class="filter-btn" data-filter="casual-top">Casual Top</button>
+      <button class="filter-btn" data-filter="casual-bottom">Casual Bottom</button>
+      <button class="filter-btn" data-filter="outerwear">Outerwear</button>
+      <button class="filter-btn" data-filter="shoes">Shoes</button>
+      <button class="filter-btn" data-filter="bag">Bag</button>
+      <button class="filter-btn" data-filter="accessory">Accessory</button>
+    </div>
+  </div>
+  <div class="inv-controls">
+    <div class="filter-group">
+      <button class="filter-btn" data-status="fit">Fits Well</button>
+      <button class="filter-btn" data-status="small">Too Small</button>
+      <button class="filter-btn" data-status="towash">To Wash</button>
+      <button class="filter-btn" data-status="tosell">To Sell</button>
+    </div>
+    <button class="btn btn-primary" onclick="openAddModal()">+ Add Item</button>
+  </div>
+  <div id="itemGrid" class="item-grid"></div>
+  <div id="emptyInventory" class="empty-state" style="display:none">
+    <div class="icon">&#128090;</div>
+    <p>Your wardrobe is empty. Start by adding items!</p>
+    <button class="btn btn-primary" onclick="openAddModal()">+ Add First Item</button>
+  </div>
+</div>
+
+<!-- WEEKLY PLANNER -->
+<div class="panel" id="panel-planner">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+    <div class="season-tabs">
+      <button class="season-btn active" data-season="spring">Spring</button>
+      <button class="season-btn" data-season="summer">Summer</button>
+      <button class="season-btn" data-season="autumn">Autumn</button>
+      <button class="season-btn" data-season="winter">Winter</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2)">Set once per season, repeat every week</div>
+  </div>
+  <div class="week-grid" id="weekGrid"></div>
+</div>
+
+<!-- WASH QUEUE -->
+<div class="panel" id="panel-wash">
+  <div class="queue-section"><h3>Dry Clean <span class="count" id="dryCount">0</span></h3><div class="queue-list" id="dryCleanList"></div></div>
+  <div class="queue-section"><h3>Hand Wash <span class="count" id="handCount">0</span></h3><div class="queue-list" id="handWashList"></div></div>
+  <div class="queue-section"><h3>Machine Wash <span class="count" id="machineCount">0</span></h3><div class="queue-list" id="machineWashList"></div></div>
+  <div id="emptyWash" class="empty-state" style="display:none"><div class="icon">&#10024;</div><p>All clean!</p></div>
+</div>
+
+<!-- SELL -->
+<div class="panel" id="panel-sell">
+  <div class="sell-summary">
+    <div><div class="sell-stat-num" id="sellTotal">0</div><div class="sell-stat-label">Items to Sell</div></div>
+    <div><div class="sell-stat-num" id="sellSmall">0</div><div class="sell-stat-label">Too Small</div></div>
+    <div><div class="sell-stat-num" id="sellUnworn">0</div><div class="sell-stat-label">6+ Months Unworn</div></div>
+  </div>
+  <div class="size-warning" id="sizeWarning" style="display:none">
+    <div class="sw-icon">&#9888;&#65039;</div>
+    <div class="sw-text">You have <strong id="smallCount">0</strong> items marked "too small". If unworn 6+ months, consider letting them go.</div>
+  </div>
+  <div class="queue-list" id="sellList"></div>
+  <div id="emptySell" class="empty-state" style="display:none"><div class="icon">&#128176;</div><p>No items flagged for sale.</p></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="panel" id="panel-settings">
+  <div class="settings-section">
+    <h4>AI Auto-Tag (Claude Vision)</h4>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Enter your Anthropic API key to enable photo auto-recognition. Key is stored locally in your browser only.</p>
+    <input class="api-key-input" id="apiKeyInput" type="password" placeholder="sk-ant-..." value="">
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-sm btn-primary" onclick="saveApiKey()">Save Key</button>
+      <button class="btn btn-sm" onclick="toggleKeyVisibility()">Show/Hide</button>
+      <span id="keyStatus" style="font-size:12px;color:var(--success);align-self:center"></span>
+    </div>
+  </div>
+  <div class="settings-section">
+    <h4>Data Management</h4>
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="exportData()">Export JSON</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">Import JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
+    </div>
+    <div class="export-area"><textarea id="exportArea" placeholder="Export data will appear here..." readonly></textarea></div>
+  </div>
+</div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3 id="modalTitle">Add New Item</h3>
+    <input type="hidden" id="editId">
+
+    <!-- Photo Upload -->
+    <div class="photo-upload">
+      <div class="photo-drop" id="photoDrop" onclick="document.getElementById('photoInput').click()">
+        <div class="drop-icon">&#128247;</div>
+        <div class="drop-text">Click to upload or drag photo here</div>
+        <div class="drop-text2">Supports JPG, PNG, HEIC</div>
+      </div>
+      <div class="photo-preview" id="photoPreview">
+        <img id="photoImg" src="">
+        <button class="photo-remove" onclick="removePhoto()">&times;</button>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoSelect(event)">
+    </div>
+
+    <!-- AI Auto Tag -->
+    <div class="ai-tag-bar">
+      <button class="btn btn-ai btn-sm" id="aiTagBtn" onclick="autoTag()" disabled>&#9889; AI Auto-Tag</button>
+      <div class="ai-status" id="aiStatus"></div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group"><label>Name *</label><input id="fName" placeholder="e.g. Black Blazer"></div>
+      <div class="form-group"><label>Brand</label><input id="fBrand" placeholder="e.g. MaxMara"></div>
+      <div class="form-group">
+        <label>Category *</label>
+        <select id="fCategory">
+          <option value="">-- Select --</option>
+          <optgroup label="Formal / Office">
+            <option value="formal-top">Formal Top (blouse/shirt)</option>
+            <option value="formal-bottom">Formal Bottom (skirt/pants)</option>
+            <option value="formal-set">Formal Set (suit)</option>
+          </optgroup>
+          <optgroup label="Gala / Event">
+            <option value="gala-dress">Gala Dress</option>
+            <option value="gala-top">Gala Top / Blouse</option>
+          </optgroup>
+          <optgroup label="Casual">
+            <option value="casual-top">Casual Top</option>
+            <option value="casual-bottom">Casual Bottom</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="outerwear">Outerwear (coat/jacket)</option>
+            <option value="shoes">Shoes</option>
+            <option value="bag">Bag</option>
+            <option value="accessory">Accessory (scarf/jewelry)</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="form-group"><label>Color</label><input id="fColor" placeholder="e.g. Black, Navy"></div>
+      <div class="form-group">
+        <label>Season</label>
+        <select id="fSeason">
+          <option value="all">All Seasons</option>
+          <option value="spring">Spring</option>
+          <option value="summer">Summer</option>
+          <option value="autumn">Autumn</option>
+          <option value="winter">Winter</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Size Fit</label>
+        <select id="fFit"><option value="fit">Fits Well</option><option value="small">Too Small (keeping)</option></select>
+      </div>
+      <div class="form-group">
+        <label>Wash Method</label>
+        <select id="fWash"><option value="dry">Dry Clean</option><option value="hand">Hand Wash</option><option value="machine">Machine Wash</option></select>
+      </div>
+      <div class="form-group"><label>Est. Value (CNY)</label><input id="fValue" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><label>Notes</label><textarea id="fNotes" rows="2" placeholder="Optional notes..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PICKER MODAL -->
+<div class="modal-overlay" id="pickerModal">
+  <div class="modal">
+    <h3>Choose Item</h3>
+    <input class="search-box" id="pickerSearch" placeholder="Search..." style="margin-bottom:12px;width:100%">
+    <div class="picker-list" id="pickerList"></div>
+    <div class="modal-actions"><button class="btn" onclick="closePickerModal()">Cancel</button></div>
+  </div>
+</div>
+
+<script>
+// =============== IndexedDB for photos ===============
+const DB_NAME = 'wardrobe_photos';
+const DB_VER = 1;
+let photoDB = null;
+
+function openPhotoDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => { e.target.result.createObjectStore('photos', { keyPath: 'id' }); };
+    req.onsuccess = e => { photoDB = e.target.result; resolve(photoDB); };
+    req.onerror = e => reject(e);
+  });
+}
+
+function savePhoto(id, dataUrl) {
+  return new Promise((resolve, reject) => {
+    const tx = photoDB.transaction('photos', 'readwrite');
+    tx.objectStore('photos').put({ id, data: dataUrl });
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e);
+  });
+}
+
+function getPhoto(id) {
+  return new Promise((resolve, reject) => {
+    const tx = photoDB.transaction('photos', 'readonly');
+    const req = tx.objectStore('photos').get(id);
+    req.onsuccess = () => resolve(req.result ? req.result.data : null);
+    req.onerror = e => reject(e);
+  });
+}
+
+function deletePhoto(id) {
+  return new Promise((resolve, reject) => {
+    const tx = photoDB.transaction('photos', 'readwrite');
+    tx.objectStore('photos').delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e);
+  });
+}
+
+// Photo cache for rendering
+const photoCache = {};
+
+async function loadAllPhotos() {
+  return new Promise((resolve, reject) => {
+    const tx = photoDB.transaction('photos', 'readonly');
+    const store = tx.objectStore('photos');
+    const req = store.getAll();
+    req.onsuccess = () => {
+      req.result.forEach(r => { photoCache[r.id] = r.data; });
+      resolve();
+    };
+    req.onerror = e => reject(e);
+  });
+}
+
+// =============== Compress image ===============
+function compressImage(file, maxW = 600, quality = 0.7) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = h * maxW / w; w = maxW; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// =============== DATA ===============
+const STORAGE_KEY = 'wardrobe_data';
+const API_KEY_KEY = 'wardrobe_api_key';
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const SLOTS = [
+  { key:'top', label:'Top' }, { key:'bottom', label:'Bottom' },
+  { key:'outer', label:'Outerwear' }, { key:'shoes', label:'Shoes' },
+  { key:'bag', label:'Bag' }, { key:'acc', label:'Accessory' }
+];
+const CAT_LABELS = {
+  'formal-top':'Formal Top','formal-bottom':'Formal Bottom','formal-set':'Formal Set',
+  'gala-dress':'Gala Dress','gala-top':'Gala Top',
+  'casual-top':'Casual Top','casual-bottom':'Casual Bottom',
+  'outerwear':'Outerwear','shoes':'Shoes','bag':'Bag','accessory':'Accessory'
+};
+const CAT_TAG = {
+  'formal-top':'formal','formal-bottom':'formal','formal-set':'formal',
+  'gala-dress':'gala','gala-top':'gala',
+  'casual-top':'casual','casual-bottom':'casual',
+  'outerwear':'casual','shoes':'shoes','bag':'acc','accessory':'acc'
+};
+
+let data = loadData();
+let currentPhotoData = null; // temp for modal
+
+function defaultData() { return { items:[], planner:{spring:{},summer:{},autumn:{},winter:{}}, nextId:1 }; }
+
+function loadData() {
+  try { const raw = localStorage.getItem(STORAGE_KEY); if(raw){const d=JSON.parse(raw);if(d.items)return d;} } catch(e){}
+  return defaultData();
+}
+
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); updateStats(); }
+
+// =============== API KEY ===============
+function getApiKey() { return localStorage.getItem(API_KEY_KEY) || ''; }
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) { localStorage.setItem(API_KEY_KEY, key); document.getElementById('keyStatus').textContent = 'Saved!'; }
+}
+function toggleKeyVisibility() {
+  const inp = document.getElementById('apiKeyInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// =============== TABS ===============
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+    if(t.dataset.tab==='planner') renderPlanner();
+    if(t.dataset.tab==='wash') renderWashQueue();
+    if(t.dataset.tab==='sell') renderSellList();
+    if(t.dataset.tab==='settings') { document.getElementById('apiKeyInput').value = getApiKey(); }
+  });
+});
+
+// =============== STATS ===============
+function updateStats() {
+  const now = Date.now(), sixM = 180*24*60*60*1000, items = data.items;
+  const washItems = items.filter(i=>i.status==='towash');
+  const sellItems = items.filter(i=>i.status==='tosell'||(i.lastWorn&&(now-i.lastWorn>sixM)));
+  document.getElementById('totalCount').textContent = items.length;
+  document.getElementById('activeCount').textContent = items.filter(i=>i.fit==='fit'&&i.status!=='tosell').length;
+  document.getElementById('washCount').textContent = washItems.length;
+  document.getElementById('sellCount').textContent = sellItems.length;
+  const wb=document.getElementById('washBadge'), sb=document.getElementById('sellBadge');
+  if(washItems.length>0){wb.style.display='';wb.textContent=washItems.length;}else{wb.style.display='none';}
+  if(sellItems.length>0){sb.style.display='';sb.textContent=sellItems.length;}else{sb.style.display='none';}
+}
+
+// =============== INVENTORY ===============
+let currentFilter='all', currentStatus='';
+
+document.querySelectorAll('.filter-btn[data-filter]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); currentFilter=b.dataset.filter; renderInventory();
+  });
+});
+document.querySelectorAll('.filter-btn[data-status]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    if(currentStatus===b.dataset.status){currentStatus='';b.classList.remove('active');}
+    else{document.querySelectorAll('.filter-btn[data-status]').forEach(x=>x.classList.remove('active'));b.classList.add('active');currentStatus=b.dataset.status;}
+    renderInventory();
+  });
+});
+document.getElementById('searchBox').addEventListener('input',()=>renderInventory());
+
+function renderInventory() {
+  const grid=document.getElementById('itemGrid'), empty=document.getElementById('emptyInventory');
+  const q=document.getElementById('searchBox').value.toLowerCase();
+  const now=Date.now(), sixM=180*24*60*60*1000;
+
+  let items = data.items.filter(i=>{
+    if(currentFilter!=='all'&&i.category!==currentFilter)return false;
+    if(currentStatus==='fit'&&i.fit!=='fit')return false;
+    if(currentStatus==='small'&&i.fit!=='small')return false;
+    if(currentStatus==='towash'&&i.status!=='towash')return false;
+    if(currentStatus==='tosell'&&i.status!=='tosell'&&!(i.lastWorn&&(now-i.lastWorn>sixM)))return false;
+    if(q){const s=[i.name,i.brand,i.color,i.notes].join(' ').toLowerCase();if(!s.includes(q))return false;}
+    return true;
+  });
+
+  if(!items.length){
+    grid.innerHTML='';
+    empty.style.display=data.items.length===0?'':'none';
+    if(data.items.length>0&&!items.length) grid.innerHTML='<div class="empty-state"><p>No items match.</p></div>';
+    return;
+  }
+  empty.style.display='none';
+
+  grid.innerHTML = items.map(i=>{
+    const tagClass=CAT_TAG[i.category]||'casual';
+    const isOld=i.lastWorn&&(now-i.lastWorn>sixM);
+    const lastStr=i.lastWorn?daysSince(i.lastWorn):'Never worn';
+    const photo = photoCache[i.id];
+    const imgHtml = photo
+      ? `<img class="item-img" src="${photo}" loading="lazy">`
+      : `<div class="item-img-placeholder">&#128090;</div>`;
+    return `<div class="item-card">
+      ${imgHtml}
+      <div class="item-body">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+          <div>
+            <div class="item-name">${esc(i.name)}</div>
+            ${i.brand?`<div class="item-brand">${esc(i.brand)}</div>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--text2)">#${i.id}</div>
+        </div>
+        <div class="item-meta">${CAT_LABELS[i.category]||i.category} · ${i.color||'-'} · ${i.season==='all'?'All Seasons':i.season}</div>
+        <div class="item-tags">
+          <span class="tag tag-${tagClass}">${CAT_LABELS[i.category]}</span>
+          ${i.fit==='small'?'<span class="tag tag-small">Too Small</span>':'<span class="tag tag-fit">Fits</span>'}
+          ${i.status==='towash'?'<span class="tag tag-wash">To Wash</span>':''}
+          ${i.status==='tosell'||isOld?'<span class="tag tag-sell">To Sell</span>':''}
+        </div>
+        <div class="last-worn">${i.lastWorn?`Last worn: ${isOld?'<strong>':''}${lastStr}${isOld?'</strong>':''}`:'Never tracked'}</div>
+        <div class="item-actions">
+          <button class="btn btn-sm" onclick="wearItem(${i.id})">&#128085; Worn Today</button>
+          <button class="btn btn-sm btn-search" onclick="searchPrice(${i.id})">&#128269; Price</button>
+          <button class="btn btn-sm" onclick="editItem(${i.id})">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem(${i.id})">Del</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function daysSince(ts){const d=Math.floor((Date.now()-ts)/(24*60*60*1000));if(d===0)return'Today';if(d===1)return'Yesterday';if(d<30)return d+' days ago';if(d<365)return Math.floor(d/30)+' months ago';return Math.floor(d/365)+' years ago';}
+function esc(s){if(!s)return'';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// =============== PHOTO HANDLING ===============
+const photoDrop = document.getElementById('photoDrop');
+const photoPreview = document.getElementById('photoPreview');
+const photoImg = document.getElementById('photoImg');
+
+photoDrop.addEventListener('dragover', e => { e.preventDefault(); photoDrop.classList.add('dragover'); });
+photoDrop.addEventListener('dragleave', () => photoDrop.classList.remove('dragover'));
+photoDrop.addEventListener('drop', e => {
+  e.preventDefault(); photoDrop.classList.remove('dragover');
+  if(e.dataTransfer.files.length) handlePhoto(e.dataTransfer.files[0]);
+});
+
+function handlePhotoSelect(e) { if(e.target.files.length) handlePhoto(e.target.files[0]); }
+
+async function handlePhoto(file) {
+  const dataUrl = await compressImage(file, 600, 0.75);
+  currentPhotoData = dataUrl;
+  photoImg.src = dataUrl;
+  photoDrop.style.display = 'none';
+  photoPreview.style.display = 'block';
+  document.getElementById('aiTagBtn').disabled = !getApiKey();
+  updateAiStatus('');
+}
+
+function removePhoto() {
+  currentPhotoData = null;
+  photoImg.src = '';
+  photoPreview.style.display = 'none';
+  photoDrop.style.display = '';
+  document.getElementById('aiTagBtn').disabled = true;
+}
+
+// =============== AI AUTO-TAG ===============
+async function autoTag() {
+  const apiKey = getApiKey();
+  if(!apiKey) { updateAiStatus('Set API key in Settings first', 'error'); return; }
+  if(!currentPhotoData) { updateAiStatus('Upload a photo first', 'error'); return; }
+
+  const btn = document.getElementById('aiTagBtn');
+  btn.disabled = true;
+  updateAiStatus('Analyzing with Claude Vision...', 'loading');
+
+  try {
+    const base64 = currentPhotoData.split(',')[1];
+    const mediaType = currentPhotoData.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: base64 }
+            },
+            {
+              type: 'text',
+              text: `Analyze this clothing/shoe/accessory photo. Return ONLY a JSON object (no markdown, no explanation) with these fields:
+
+{
+  "name": "short descriptive name in English, e.g. 'Navy Silk Blouse', 'Black Stiletto Pumps'",
+  "brand": "brand name if visible on the item (logo, label, tag, etc), otherwise empty string",
+  "category": "one of: formal-top, formal-bottom, formal-set, gala-dress, gala-top, casual-top, casual-bottom, outerwear, shoes, bag, accessory",
+  "color": "main color(s) in English",
+  "season": "one of: spring, summer, autumn, winter, all",
+  "wash": "one of: dry, hand, machine — based on typical care for this type of garment/material"
+}
+
+Important for brand detection:
+- Look carefully at any visible logos, text, labels, hardware engravings, or brand-specific patterns
+- For shoes: check the insole, tongue, heel, and sole for brand marks
+- For bags: check hardware, clasps, zippers, lining, tags
+- Common luxury brands to look for: Chanel, Hermes, Louis Vuitton, Gucci, Prada, Dior, YSL, Valentino, Balenciaga, Bottega Veneta, Celine, Fendi, Burberry, MaxMara, Jimmy Choo, Manolo Blahnik, Christian Louboutin, Stuart Weitzman, Roger Vivier, Tod's, Ferragamo, Cartier, Tiffany, Van Cleef
+- If you can identify the brand with reasonable confidence from design cues (e.g. red soles = Louboutin, interlocking CC = Chanel), include it
+- If uncertain, leave brand as empty string`
+            }
+          ]
+        }]
+      })
+    });
+
+    if(!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`API error ${resp.status}: ${err}`);
+    }
+
+    const result = await resp.json();
+    const text = result.content[0].text.trim();
+    // Parse JSON — handle potential markdown wrapping
+    const jsonStr = text.replace(/^```json?\s*/,'').replace(/\s*```$/,'');
+    const parsed = JSON.parse(jsonStr);
+
+    // Fill form fields
+    if(parsed.name) document.getElementById('fName').value = parsed.name;
+    if(parsed.brand) document.getElementById('fBrand').value = parsed.brand;
+    if(parsed.category) document.getElementById('fCategory').value = parsed.category;
+    if(parsed.color) document.getElementById('fColor').value = parsed.color;
+    if(parsed.season) document.getElementById('fSeason').value = parsed.season;
+    if(parsed.wash) document.getElementById('fWash').value = parsed.wash;
+
+    const brandNote = parsed.brand ? ` · Brand: ${parsed.brand}` : '';
+    updateAiStatus(`Done! ${parsed.name}${brandNote}`, 'success');
+
+  } catch(err) {
+    console.error('AI Tag error:', err);
+    updateAiStatus('Error: ' + err.message.slice(0,80), 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function updateAiStatus(msg, cls) {
+  const el = document.getElementById('aiStatus');
+  el.textContent = msg;
+  el.className = 'ai-status' + (cls ? ' '+cls : '');
+}
+
+// =============== ADD/EDIT MODAL ===============
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add New Item';
+  document.getElementById('editId').value = '';
+  ['fName','fBrand','fColor','fValue','fNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fCategory').value = '';
+  document.getElementById('fSeason').value = 'all';
+  document.getElementById('fFit').value = 'fit';
+  document.getElementById('fWash').value = 'dry';
+  removePhoto();
+  updateAiStatus('');
+  document.getElementById('aiTagBtn').disabled = true;
+  document.getElementById('addModal').classList.add('show');
+}
+
+async function editItem(id) {
+  const item = data.items.find(i=>i.id===id);
+  if(!item) return;
+  document.getElementById('modalTitle').textContent = 'Edit Item';
+  document.getElementById('editId').value = id;
+  document.getElementById('fName').value = item.name;
+  document.getElementById('fBrand').value = item.brand||'';
+  document.getElementById('fCategory').value = item.category;
+  document.getElementById('fColor').value = item.color||'';
+  document.getElementById('fSeason').value = item.season||'all';
+  document.getElementById('fFit').value = item.fit||'fit';
+  document.getElementById('fWash').value = item.wash||'dry';
+  document.getElementById('fValue').value = item.value||'';
+  document.getElementById('fNotes').value = item.notes||'';
+  updateAiStatus('');
+
+  // Load existing photo
+  const photo = await getPhoto(id);
+  if(photo) {
+    currentPhotoData = photo;
+    photoImg.src = photo;
+    photoDrop.style.display = 'none';
+    photoPreview.style.display = 'block';
+    document.getElementById('aiTagBtn').disabled = !getApiKey();
+  } else {
+    removePhoto();
+  }
+
+  document.getElementById('addModal').classList.add('show');
+}
+
+function closeAddModal() { document.getElementById('addModal').classList.remove('show'); currentPhotoData=null; }
+
+async function saveItem() {
+  const name = document.getElementById('fName').value.trim();
+  const cat = document.getElementById('fCategory').value;
+  if(!name||!cat) { alert('Name and Category are required.'); return; }
+
+  const editId = document.getElementById('editId').value;
+  const obj = {
+    name, brand:document.getElementById('fBrand').value.trim(),
+    category:cat, color:document.getElementById('fColor').value.trim(),
+    season:document.getElementById('fSeason').value,
+    fit:document.getElementById('fFit').value,
+    wash:document.getElementById('fWash').value,
+    value:parseFloat(document.getElementById('fValue').value)||0,
+    notes:document.getElementById('fNotes').value.trim()
+  };
+
+  let itemId;
+  if(editId) {
+    itemId = parseInt(editId);
+    const idx = data.items.findIndex(i=>i.id===itemId);
+    if(idx!==-1) Object.assign(data.items[idx], obj);
+  } else {
+    itemId = data.nextId++;
+    obj.id = itemId;
+    obj.lastWorn = null;
+    obj.status = 'clean';
+    obj.wornCount = 0;
+    obj.addedAt = Date.now();
+    data.items.push(obj);
+  }
+
+  // Save photo
+  if(currentPhotoData) {
+    await savePhoto(itemId, currentPhotoData);
+    photoCache[itemId] = currentPhotoData;
+  }
+
+  saveData();
+  closeAddModal();
+  renderInventory();
+}
+
+async function deleteItem(id) {
+  if(!confirm('Delete this item?')) return;
+  data.items = data.items.filter(i=>i.id!==id);
+  for(const s in data.planner) for(const k in data.planner[s]) if(data.planner[s][k]===id) delete data.planner[s][k];
+  await deletePhoto(id);
+  delete photoCache[id];
+  saveData();
+  renderInventory();
+}
+
+function wearItem(id) {
+  const item = data.items.find(i=>i.id===id);
+  if(!item) return;
+  item.lastWorn = Date.now();
+  item.wornCount = (item.wornCount||0)+1;
+  item.status = 'towash';
+  saveData();
+  renderInventory();
+}
+
+// =============== WEEKLY PLANNER ===============
+let currentSeason = 'spring';
+
+document.querySelectorAll('.season-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.season-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); currentSeason=b.dataset.season; renderPlanner();
+  });
+});
+
+function renderPlanner() {
+  const grid=document.getElementById('weekGrid');
+  const plan=data.planner[currentSeason]||{};
+  const today=new Date().getDay();
+  const todayIdx=today===0?6:today-1;
+
+  grid.innerHTML = DAYS.map((day,di)=>{
+    const isToday=di===todayIdx;
+    const slotsHtml = SLOTS.map(slot=>{
+      const key=`${di}_${slot.key}`;
+      const itemId=plan[key];
+      const item=itemId?data.items.find(i=>i.id===itemId):null;
+      if(item){
+        const thumb = photoCache[item.id];
+        const thumbHtml = thumb ? `<img class="slot-thumb" src="${thumb}">` : '';
+        return `<div class="slot filled">
+          ${thumbHtml}
+          <div class="slot-info">
+            <div class="slot-label">${slot.label}</div>
+            <div class="slot-name">${esc(item.name)}</div>
+            <div class="slot-brand">${esc(item.brand)}</div>
+          </div>
+          <span class="slot-remove" onclick="removePlanSlot('${key}')">&times;</span>
+        </div>`;
+      }
+      return `<div class="slot" onclick="openPicker('${key}','${slot.key}')">+ ${slot.label}</div>`;
+    }).join('');
+    return `<div class="day-col"><div class="day-header ${isToday?'today':''}">${day}</div><div class="day-slots">${slotsHtml}</div></div>`;
+  }).join('');
+}
+
+function removePlanSlot(key) { delete data.planner[currentSeason][key]; saveData(); renderPlanner(); }
+
+// =============== PICKER ===============
+let pickerTarget='', pickerSlotType='';
+
+function openPicker(key,slotType) {
+  pickerTarget=key; pickerSlotType=slotType;
+  document.getElementById('pickerSearch').value='';
+  renderPickerList('');
+  document.getElementById('pickerModal').classList.add('show');
+}
+function closePickerModal() { document.getElementById('pickerModal').classList.remove('show'); }
+document.getElementById('pickerSearch').addEventListener('input',e=>renderPickerList(e.target.value));
+
+function renderPickerList(q) {
+  q=q.toLowerCase();
+  const compatible={top:['formal-top','gala-top','casual-top','formal-set','gala-dress'],bottom:['formal-bottom','casual-bottom'],outer:['outerwear'],shoes:['shoes'],bag:['bag'],acc:['accessory']};
+  const cats=compatible[pickerSlotType]||[];
+  let items=data.items.filter(i=>{
+    if(!cats.includes(i.category))return false;
+    if(i.fit==='small')return false;
+    if(i.season!=='all'&&i.season!==currentSeason)return false;
+    if(q){const s=[i.name,i.brand,i.color].join(' ').toLowerCase();if(!s.includes(q))return false;}
+    return true;
+  });
+  const list=document.getElementById('pickerList');
+  if(!items.length){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--text2)">No matching items.</div>';return;}
+  list.innerHTML=items.map(i=>{
+    const thumb=photoCache[i.id];
+    const thumbHtml=thumb?`<img class="pi-thumb" src="${thumb}">`:'';
+    return `<div class="picker-item" onclick="pickItem(${i.id})">
+      ${thumbHtml}
+      <div><div class="pi-name">${esc(i.name)} ${i.brand?'<span style="color:var(--accent);font-weight:400">· '+esc(i.brand)+'</span>':''}</div>
+      <div class="pi-detail">${CAT_LABELS[i.category]} · ${i.color||'-'}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function pickItem(id) {
+  if(!data.planner[currentSeason]) data.planner[currentSeason]={};
+  data.planner[currentSeason][pickerTarget]=id;
+  saveData(); closePickerModal(); renderPlanner();
+}
+
+// =============== WASH QUEUE ===============
+function renderWashQueue() {
+  const washItems=data.items.filter(i=>i.status==='towash');
+  const dry=washItems.filter(i=>i.wash==='dry');
+  const hand=washItems.filter(i=>i.wash==='hand');
+  const machine=washItems.filter(i=>i.wash==='machine');
+  document.getElementById('dryCount').textContent=dry.length;
+  document.getElementById('handCount').textContent=hand.length;
+  document.getElementById('machineCount').textContent=machine.length;
+
+  const renderList=(items,cid)=>{
+    document.getElementById(cid).innerHTML=items.map(i=>{
+      const thumb=photoCache[i.id];
+      return `<div class="queue-item">
+        ${thumb?`<img class="queue-item-img" src="${thumb}">`:''}
+        <div class="queue-item-info">
+          <div class="name">${esc(i.name)}</div>
+          <div class="detail">${esc(i.brand)} · ${CAT_LABELS[i.category]} · Last worn: ${i.lastWorn?daysSince(i.lastWorn):'-'}</div>
+        </div>
+        <button class="btn btn-sm" onclick="markClean(${i.id})">&#10003; Cleaned</button>
+      </div>`;
+    }).join('');
+  };
+  renderList(dry,'dryCleanList'); renderList(hand,'handWashList'); renderList(machine,'machineWashList');
+  document.getElementById('emptyWash').style.display=washItems.length===0?'':'none';
+}
+
+function markClean(id) { const i=data.items.find(x=>x.id===id); if(i)i.status='clean'; saveData(); renderWashQueue(); }
+
+// =============== SELL LIST ===============
+function renderSellList() {
+  const now=Date.now(), sixM=180*24*60*60*1000;
+  const sellItems=data.items.filter(i=>{
+    if(i.status==='tosell')return true;
+    if(i.lastWorn&&(now-i.lastWorn>sixM))return true;
+    if(!i.lastWorn&&i.addedAt&&(now-i.addedAt>sixM))return true;
+    return false;
+  });
+  const smallItems=data.items.filter(i=>i.fit==='small');
+  const unwornItems=sellItems.filter(i=>i.lastWorn&&(now-i.lastWorn>sixM));
+
+  document.getElementById('sellTotal').textContent=sellItems.length+smallItems.filter(i=>!sellItems.includes(i)).length;
+  document.getElementById('sellSmall').textContent=smallItems.length;
+  document.getElementById('sellUnworn').textContent=unwornItems.length;
+
+  const sw=document.getElementById('sizeWarning');
+  if(smallItems.length>0){sw.style.display='';document.getElementById('smallCount').textContent=smallItems.length;}else{sw.style.display='none';}
+
+  const allSell=[...new Set([...sellItems,...smallItems])];
+  const list=document.getElementById('sellList');
+  if(!allSell.length){list.innerHTML='';document.getElementById('emptySell').style.display='';return;}
+  document.getElementById('emptySell').style.display='none';
+
+  list.innerHTML=allSell.map(i=>{
+    const reasons=[];
+    if(i.fit==='small')reasons.push('Too Small');
+    if(i.lastWorn&&(now-i.lastWorn>sixM))reasons.push('6+ months unworn');
+    if(i.status==='tosell')reasons.push('Marked for sale');
+    const thumb=photoCache[i.id];
+    return `<div class="queue-item">
+      ${thumb?`<img class="queue-item-img" src="${thumb}">`:''}
+      <div class="queue-item-info">
+        <div class="name">${esc(i.name)} ${i.brand?'<span style="color:var(--accent)">· '+esc(i.brand)+'</span>':''}</div>
+        <div class="detail">${CAT_LABELS[i.category]} · ${i.color||'-'} · ${reasons.join(' · ')} ${i.value?'· Est. ¥'+i.value:''}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm btn-search" onclick="searchPrice(${i.id})">&#128269;</button>
+        <button class="btn btn-sm" onclick="markSold(${i.id})">Sold</button>
+        <button class="btn btn-sm" onclick="markKeep(${i.id})">Keep</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function markSold(id){if(!confirm('Remove from wardrobe?'))return;data.items=data.items.filter(i=>i.id!==id);deletePhoto(id);delete photoCache[id];saveData();renderSellList();}
+function markKeep(id){const i=data.items.find(x=>x.id===id);if(i){i.status='clean';i.lastWorn=Date.now();}saveData();renderSellList();}
+
+// =============== IMPORT/EXPORT ===============
+function exportData() {
+  const json=JSON.stringify(data,null,2);
+  document.getElementById('exportArea').value=json;
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='wardrobe-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(e) {
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{const d=JSON.parse(ev.target.result);if(d.items){if(confirm(`Import ${d.items.length} items?`)){data=d;saveData();renderInventory();alert('Imported!');}}}catch(err){alert('Invalid JSON.');}
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData() {
+  if(!confirm('Delete ALL data?'))return;
+  if(!confirm('Are you sure?'))return;
+  data=defaultData(); saveData();
+  // Clear photos
+  if(photoDB){const tx=photoDB.transaction('photos','readwrite');tx.objectStore('photos').clear();}
+  Object.keys(photoCache).forEach(k=>delete photoCache[k]);
+  renderInventory();
+}
+
+// =============== PRICE SEARCH ===============
+function searchPrice(id) {
+  const item = data.items.find(i=>i.id===id);
+  if(!item) return;
+  const q = [item.brand, item.name, item.color].filter(Boolean).join(' ').trim();
+  const qEn = encodeURIComponent(q);
+  const qCn = encodeURIComponent(q);
+
+  const links = [
+    { label: '&#128270; Google Shopping', url: `https://www.google.com/search?tbm=shop&q=${qEn}` },
+    { label: '&#127968; Xianyu (Idle Fish)', url: `https://s.idle.fish/s?keyword=${qCn}` },
+    { label: '&#128293; Dewu (Poizon)', url: `https://m.dewu.com/search/result?keyword=${qCn}` },
+    { label: '&#127380; The RealReal', url: `https://www.therealreal.com/search?q=${qEn}` },
+    { label: '&#9733; Vestiaire Collective', url: `https://www.vestiairecollective.com/search/?q=${qEn}` },
+    { label: '&#128717; eBay', url: `https://www.ebay.com/sch/i.html?_nkw=${qEn}` },
+    { label: '&#127987; Rebag', url: `https://www.rebag.com/search?q=${qEn}` },
+  ];
+
+  // Open search results panel
+  const html = `
+    <div style="padding:20px">
+      <h3 style="margin-bottom:4px">Search: ${esc(q)}</h3>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:16px">${esc(item.name)} ${item.brand?'by '+esc(item.brand):''}</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${links.map(l=>`<a href="${l.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);text-decoration:none;font-size:14px;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">${l.label}</a>`).join('')}
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn btn-ai btn-sm" onclick="aiEstimatePrice(${id})" ${getApiKey()?'':'disabled'}>&#9889; AI Estimate Price</button>
+        <span id="priceEstimate" style="font-size:12px;color:var(--text2);margin-left:8px"></span>
+      </div>
+    </div>`;
+
+  // Show in a modal
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="modal" style="max-width:480px">${html}<div class="modal-actions"><button class="btn" onclick="this.closest('.modal-overlay').remove()">Close</button></div></div>`;
+  document.body.appendChild(overlay);
+}
+
+async function aiEstimatePrice(id) {
+  const item = data.items.find(i=>i.id===id);
+  if(!item) return;
+  const apiKey = getApiKey();
+  if(!apiKey) return;
+
+  const el = document.getElementById('priceEstimate');
+  el.textContent = 'Estimating...';
+  el.style.color = 'var(--warn)';
+
+  try {
+    const photo = await getPhoto(id);
+    const content = [];
+    if(photo) {
+      content.push({
+        type:'image',
+        source:{type:'base64', media_type:'image/jpeg', data:photo.split(',')[1]}
+      });
+    }
+    content.push({
+      type:'text',
+      text:`This is a ${item.category.replace('-',' ')}. Brand: ${item.brand||'unknown'}. Name: ${item.name}. Color: ${item.color||'unknown'}.
+
+Estimate the resale price in CNY for this item. Consider:
+1. Original retail price (if brand is known)
+2. Typical second-hand market value (good condition)
+3. Platform: Xianyu, Dewu, The RealReal
+
+Return ONLY a JSON: {"retail_estimate":"¥XXX","resale_low":"¥XXX","resale_high":"¥XXX","note":"brief note"}`
+    });
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:300,
+        messages:[{role:'user',content}]
+      })
+    });
+
+    const result = await resp.json();
+    const text = result.content[0].text.trim().replace(/^```json?\s*/,'').replace(/\s*```$/,'');
+    const p = JSON.parse(text);
+
+    el.innerHTML = `Retail: <strong style="color:var(--text)">${p.retail_estimate}</strong> · Resale: <strong style="color:var(--success)">${p.resale_low} - ${p.resale_high}</strong><br><span style="font-size:11px">${esc(p.note)}</span>`;
+    el.style.color = 'var(--text2)';
+
+    // Update item estimated value
+    const val = parseInt(String(p.resale_high).replace(/[^0-9]/g,''));
+    if(val && item) { item.value = val; saveData(); }
+
+  } catch(err) {
+    el.textContent = 'Error: '+err.message.slice(0,60);
+    el.style.color = 'var(--danger)';
+  }
+}
+
+// =============== INIT ===============
+async function init() {
+  await openPhotoDB();
+  await loadAllPhotos();
+  renderInventory();
+  updateStats();
+  // Auto-detect season
+  const m=new Date().getMonth();
+  if(m>=2&&m<=4)currentSeason='spring';
+  else if(m>=5&&m<=7)currentSeason='summer';
+  else if(m>=8&&m<=10)currentSeason='autumn';
+  else currentSeason='winter';
+  document.querySelectorAll('.season-btn').forEach(b=>b.classList.toggle('active',b.dataset.season===currentSeason));
+}
+init();
+</script>
+</body>
+</html>
