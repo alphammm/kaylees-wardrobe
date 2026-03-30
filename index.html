@@ -734,6 +734,8 @@ async function handlePhoto(file) {
   photoPreview.style.display = 'block';
   document.getElementById('aiTagBtn').disabled = !getApiKey();
   updateAiStatus('');
+  // Auto-tag on upload if API key exists
+  if (getApiKey()) autoTag();
 }
 
 function removePhoto() {
@@ -796,7 +798,7 @@ Important for brand detection:
 - For bags: check hardware, clasps, zippers, lining, tags
 - Common luxury brands to look for: Chanel, Hermes, Louis Vuitton, Gucci, Prada, Dior, YSL, Valentino, Balenciaga, Bottega Veneta, Celine, Fendi, Burberry, MaxMara, Jimmy Choo, Manolo Blahnik, Christian Louboutin, Stuart Weitzman, Roger Vivier, Tod's, Ferragamo, Cartier, Tiffany, Van Cleef
 - If you can identify the brand with reasonable confidence from design cues (e.g. red soles = Louboutin, interlocking CC = Chanel), include it
-- If uncertain, leave brand as empty string`
+- IMPORTANT: Always make your best guess. Never leave any field empty. If you are not 100% sure about the brand, pick the most likely one based on style, material, design cues, hardware, stitching, and price segment. For every field, choose the single most probable option rather than leaving it blank.`
             }
           ]
         }]
