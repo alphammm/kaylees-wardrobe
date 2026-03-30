@@ -344,15 +344,14 @@
 
     <div class="form-grid">
       <div class="form-group"><label>Name *</label><input id="fName" placeholder="e.g. Black Blazer"></div>
-      <div class="form-group"><label>Brand</label><input id="fBrand" placeholder="e.g. MaxMara"></div>
       <div class="form-group">
         <label>Category *</label>
-        <select id="fCategory">
+        <select id="fCategory" onchange="onCategoryChange()">
           <option value="">-- Select --</option>
           <optgroup label="Formal / Office">
-            <option value="formal-top">Formal Top (blouse/shirt)</option>
-            <option value="formal-bottom">Formal Bottom (skirt/pants)</option>
-            <option value="formal-set">Formal Set (suit)</option>
+            <option value="formal-top">Formal Top</option>
+            <option value="formal-bottom">Formal Bottom</option>
+            <option value="formal-set">Formal Set / Suit</option>
           </optgroup>
           <optgroup label="Gala / Event">
             <option value="gala-dress">Gala Dress</option>
@@ -363,13 +362,22 @@
             <option value="casual-bottom">Casual Bottom</option>
           </optgroup>
           <optgroup label="Other">
-            <option value="outerwear">Outerwear (coat/jacket)</option>
+            <option value="outerwear">Outerwear</option>
             <option value="shoes">Shoes</option>
             <option value="bag">Bag</option>
-            <option value="accessory">Accessory (scarf/belt/hat)</option>
-            <option value="jewelry">Jewelry (ring/necklace/bracelet/earring)</option>
+            <option value="accessory">Accessory</option>
+            <option value="jewelry">Jewelry</option>
           </optgroup>
         </select>
+      </div>
+      <div class="form-group">
+        <label>Sub-Type</label>
+        <select id="fSubtype"><option value="">-- Select Category First --</option></select>
+      </div>
+      <div class="form-group">
+        <label>Brand</label>
+        <select id="fBrandSelect" onchange="onBrandSelectChange()"><option value="">-- Select Category First --</option></select>
+        <input id="fBrand" placeholder="Enter brand name..." style="display:none;margin-top:4px">
       </div>
       <div class="form-group"><label>Color</label><input id="fColor" placeholder="e.g. Black, Navy"></div>
       <div class="form-group">
@@ -522,6 +530,68 @@ function loadData() {
 
 function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); updateStats(); }
 
+// =============== BRANDS & SUBTYPES PER CATEGORY ===============
+const BRANDS_BY_CAT = {
+  'formal-top': ['MaxMara','Theory','Hugo Boss','Ralph Lauren','Burberry','Armani','Stella McCartney','Carolina Herrera','Escada','St. John','Akris','Piazza Sempione','Etro','Brunello Cucinelli','Loro Piana'],
+  'formal-bottom': ['MaxMara','Theory','Hugo Boss','Ralph Lauren','Burberry','Armani','Stella McCartney','Escada','St. John','Akris','Piazza Sempione','Brunello Cucinelli','Loro Piana'],
+  'formal-set': ['Chanel','Dior','Armani','Hugo Boss','MaxMara','Ralph Lauren','Burberry','Escada','St. John','Akris','Brunello Cucinelli','Alexander McQueen','Tom Ford','Dolce & Gabbana'],
+  'gala-dress': ['Chanel','Dior','Valentino','Oscar de la Renta','Elie Saab','Marchesa','Zuhair Murad','Givenchy','Versace','Alexander McQueen','Carolina Herrera','Monique Lhuillier','Reem Acra','Jenny Packham','Balmain','Dolce & Gabbana','Tom Ford','Lanvin'],
+  'gala-top': ['Chanel','Dior','Valentino','Oscar de la Renta','Elie Saab','Givenchy','Versace','Alexander McQueen','Balmain','Dolce & Gabbana','Tom Ford','Lanvin','Roberto Cavalli'],
+  'casual-top': ['Uniqlo','Zara','COS','Acne Studios','Isabel Marant','Sandro','Maje','AllSaints','Vince','James Perse','Rag & Bone','T by Alexander Wang','A.P.C.','Maison Kitsuné'],
+  'casual-bottom': ['Uniqlo','Zara','COS','Acne Studios','Isabel Marant','Sandro','Maje','Citizens of Humanity','AGOLDE','Frame','Mother','Rag & Bone','A.P.C.','J Brand'],
+  'outerwear': ['MaxMara','Burberry','Moncler','Canada Goose','Mackage','Moose Knuckles','Herno','Woolrich','The North Face','Acne Studios','Loro Piana','Brunello Cucinelli','Chanel','Dior','Prada','Fendi'],
+  'shoes': ['Christian Louboutin','Jimmy Choo','Manolo Blahnik','Stuart Weitzman','Roger Vivier','Salvatore Ferragamo',"Tod's",'Gianvito Rossi','Aquazzura','René Caovilla','Valentino','Chanel','Dior','Gucci','Prada','Hermès','Bottega Veneta','Amina Muaddi','Mach & Mach'],
+  'bag': ['Hermès','Louis Vuitton','Chanel','Gucci','Prada','Dior','Celine','Bottega Veneta','Fendi','Saint Laurent','Loewe','Valentino','Balenciaga','Givenchy','Burberry','Goyard','Moynat','Delvaux','Mulberry','MCM'],
+  'accessory': ['Hermès','Burberry','Gucci','Louis Vuitton','Chanel','Dior','Fendi','Prada','Ferragamo','Cartier','Gentle Monster','Celine','Loewe','Acne Studios'],
+  'jewelry': ['Cartier','Tiffany & Co.','Van Cleef & Arpels','Bulgari','Harry Winston','Chopard','Graff','Piaget','Boucheron','Mikimoto','David Yurman','Messika','Chaumet','Fred','Pomellato','Chrome Hearts','APM Monaco','Swarovski']
+};
+
+const SUBTYPES_BY_CAT = {
+  'formal-top': ['Blouse','Shirt','Silk Top','Knit Top','Turtleneck','Camisole'],
+  'formal-bottom': ['Pencil Skirt','A-Line Skirt','Trousers','Wide-Leg Pants','Culottes','Midi Skirt'],
+  'formal-set': ['Skirt Suit','Pant Suit','Dress Suit','Three-Piece Set','Tweed Set'],
+  'gala-dress': ['Evening Gown','Cocktail Dress','Midi Dress','Maxi Dress','Mini Dress','Sequin Dress','Lace Dress','Satin Dress'],
+  'gala-top': ['Embellished Top','Silk Blouse','Corseted Top','Off-Shoulder','Sequin Top','Feather Top','Cape Top'],
+  'casual-top': ['T-Shirt','Hoodie','Sweatshirt','Knit Sweater','Tank Top','Polo','Cardigan'],
+  'casual-bottom': ['Jeans','Joggers','Shorts','Leggings','Casual Skirt','Sweatpants','Cargo Pants'],
+  'outerwear': ['Coat','Trench Coat','Blazer','Down Jacket','Leather Jacket','Fur / Faux Fur','Cape','Parka','Bomber','Wool Coat','Cashmere Coat'],
+  'shoes': ['High Heels','Stilettos','Pumps','Kitten Heels','Flats','Ballet Flats','Loafers','Mules','Sandals','Boots','Ankle Boots','Knee-High Boots','Over-the-Knee Boots','Sneakers','Espadrilles','Wedges','Platform','Slingback'],
+  'bag': ['Tote','Shoulder Bag','Crossbody','Clutch','Top Handle','Bucket Bag','Hobo','Backpack','Mini Bag','Baguette','Chain Bag','Belt Bag','Briefcase','Travel Bag'],
+  'accessory': ['Scarf','Silk Scarf','Shawl','Belt','Hat','Sunglasses','Gloves','Hair Accessory','Tie','Brooch','Watch'],
+  'jewelry': ['Ring','Necklace','Pendant','Bracelet','Bangle','Earrings','Studs','Hoop Earrings','Drop Earrings','Brooch','Anklet','Cufflinks','Watch','Tiara','Pearl Set','Diamond Set']
+};
+
+function onCategoryChange() {
+  const cat = document.getElementById('fCategory').value;
+  // Update brand dropdown
+  const brandSel = document.getElementById('fBrandSelect');
+  const brandInput = document.getElementById('fBrand');
+  const brands = BRANDS_BY_CAT[cat] || [];
+  brandSel.innerHTML = '<option value="">-- Select Brand --</option>';
+  brands.forEach(b => { brandSel.innerHTML += `<option value="${b}">${b}</option>`; });
+  brandSel.innerHTML += '<option value="__other__">Other (type manually)</option>';
+  brandInput.style.display = 'none';
+  brandInput.value = '';
+
+  // Update subtype dropdown
+  const subtypeSel = document.getElementById('fSubtype');
+  const subtypes = SUBTYPES_BY_CAT[cat] || [];
+  subtypeSel.innerHTML = '<option value="">-- Select Type --</option>';
+  subtypes.forEach(s => { subtypeSel.innerHTML += `<option value="${s}">${s}</option>`; });
+}
+
+function onBrandSelectChange() {
+  const val = document.getElementById('fBrandSelect').value;
+  const brandInput = document.getElementById('fBrand');
+  if (val === '__other__') {
+    brandInput.style.display = '';
+    brandInput.focus();
+  } else {
+    brandInput.style.display = 'none';
+    brandInput.value = val;
+  }
+}
+
 // =============== API KEY ===============
 function getApiKey() { return localStorage.getItem(API_KEY_KEY) || ''; }
 function saveApiKey() {
@@ -620,7 +690,7 @@ function renderInventory() {
           </div>
           <div style="font-size:11px;color:var(--text2)">#${i.id}</div>
         </div>
-        <div class="item-meta">${CAT_LABELS[i.category]||i.category} · ${i.color||'-'} · ${i.season==='all'?'All Seasons':i.season}</div>
+        <div class="item-meta">${CAT_LABELS[i.category]||i.category}${i.subtype?' · '+esc(i.subtype):''} · ${i.color||'-'} · ${i.season==='all'?'All Seasons':i.season}</div>
         <div class="item-tags">
           <span class="tag tag-${tagClass}">${CAT_LABELS[i.category]}</span>
           ${i.fit==='small'?'<span class="tag tag-small">Too Small</span>':'<span class="tag tag-fit">Fits</span>'}
@@ -714,6 +784,7 @@ async function autoTag() {
   "name": "short descriptive name in English, e.g. 'Navy Silk Blouse', 'Black Stiletto Pumps'",
   "brand": "brand name if visible on the item (logo, label, tag, etc), otherwise empty string",
   "category": "one of: formal-top, formal-bottom, formal-set, gala-dress, gala-top, casual-top, casual-bottom, outerwear, shoes, bag, accessory, jewelry",
+  "subtype": "specific type within category, e.g. for shoes: Stilettos/Pumps/Flats/Boots/Sneakers/Sandals/Mules/Loafers; for bag: Tote/Shoulder Bag/Crossbody/Clutch; for jewelry: Ring/Necklace/Bracelet/Earrings; for formal-top: Blouse/Shirt/Silk Top; etc.",
   "color": "main color(s) in English",
   "season": "one of: spring, summer, autumn, winter, all",
   "wash": "one of: dry, hand, machine — based on typical care for this type of garment/material"
@@ -745,8 +816,23 @@ Important for brand detection:
 
     // Fill form fields
     if(parsed.name) document.getElementById('fName').value = parsed.name;
-    if(parsed.brand) document.getElementById('fBrand').value = parsed.brand;
-    if(parsed.category) document.getElementById('fCategory').value = parsed.category;
+    if(parsed.category) {
+      document.getElementById('fCategory').value = parsed.category;
+      onCategoryChange(); // populate brand & subtype dropdowns
+    }
+    if(parsed.brand) {
+      const brands = BRANDS_BY_CAT[parsed.category] || [];
+      const brandSel = document.getElementById('fBrandSelect');
+      if(brands.includes(parsed.brand)) {
+        brandSel.value = parsed.brand;
+        document.getElementById('fBrand').style.display = 'none';
+      } else {
+        brandSel.value = '__other__';
+        document.getElementById('fBrand').value = parsed.brand;
+        document.getElementById('fBrand').style.display = '';
+      }
+    }
+    if(parsed.subtype) document.getElementById('fSubtype').value = parsed.subtype;
     if(parsed.color) document.getElementById('fColor').value = parsed.color;
     if(parsed.season) document.getElementById('fSeason').value = parsed.season;
     if(parsed.wash) document.getElementById('fWash').value = parsed.wash;
@@ -774,6 +860,9 @@ function openAddModal() {
   document.getElementById('editId').value = '';
   ['fName','fBrand','fColor','fValue','fNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fCategory').value = '';
+  document.getElementById('fBrandSelect').innerHTML = '<option value="">-- Select Category First --</option>';
+  document.getElementById('fBrand').style.display = 'none';
+  document.getElementById('fSubtype').innerHTML = '<option value="">-- Select Category First --</option>';
   document.getElementById('fSeason').value = 'all';
   document.getElementById('fFit').value = 'fit';
   document.getElementById('fWash').value = 'dry';
@@ -789,8 +878,21 @@ async function editItem(id) {
   document.getElementById('modalTitle').textContent = 'Edit Item';
   document.getElementById('editId').value = id;
   document.getElementById('fName').value = item.name;
-  document.getElementById('fBrand').value = item.brand||'';
   document.getElementById('fCategory').value = item.category;
+  onCategoryChange(); // populate brand & subtype dropdowns
+  // Set brand
+  const brandSel = document.getElementById('fBrandSelect');
+  const brands = BRANDS_BY_CAT[item.category] || [];
+  if (item.brand && brands.includes(item.brand)) {
+    brandSel.value = item.brand;
+    document.getElementById('fBrand').style.display = 'none';
+  } else if (item.brand) {
+    brandSel.value = '__other__';
+    document.getElementById('fBrand').value = item.brand;
+    document.getElementById('fBrand').style.display = '';
+  }
+  // Set subtype
+  if (item.subtype) document.getElementById('fSubtype').value = item.subtype;
   document.getElementById('fColor').value = item.color||'';
   document.getElementById('fSeason').value = item.season||'all';
   document.getElementById('fFit').value = item.fit||'fit';
@@ -822,8 +924,14 @@ async function saveItem() {
   if(!name||!cat) { alert('Name and Category are required.'); return; }
 
   const editId = document.getElementById('editId').value;
+  // Get brand from dropdown or manual input
+  const brandSel = document.getElementById('fBrandSelect').value;
+  const brandManual = document.getElementById('fBrand').value.trim();
+  const brand = (brandSel === '__other__' || brandSel === '') ? brandManual : brandSel;
+  const subtype = document.getElementById('fSubtype').value;
+
   const obj = {
-    name, brand:document.getElementById('fBrand').value.trim(),
+    name, brand, subtype,
     category:cat, color:document.getElementById('fColor').value.trim(),
     season:document.getElementById('fSeason').value,
     fit:document.getElementById('fFit').value,
