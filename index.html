@@ -73,6 +73,7 @@
   .tag-casual { background:rgba(46,204,113,.15); color:var(--success); }
   .tag-shoes { background:rgba(224,145,176,.15); color:var(--pink); }
   .tag-acc { background:rgba(243,156,18,.15); color:var(--warn); }
+  .tag-jewelry { background:rgba(201,169,110,.2); color:var(--accent); }
   .tag-small { background:rgba(231,76,60,.15); color:var(--danger); }
   .tag-fit { background:rgba(46,204,113,.15); color:var(--success); }
   .tag-wash { background:rgba(243,156,18,.2); color:var(--warn); border:1px solid rgba(243,156,18,.3); }
@@ -233,6 +234,7 @@
       <button class="filter-btn" data-filter="shoes">Shoes</button>
       <button class="filter-btn" data-filter="bag">Bag</button>
       <button class="filter-btn" data-filter="accessory">Accessory</button>
+      <button class="filter-btn" data-filter="jewelry">Jewelry</button>
     </div>
   </div>
   <div class="inv-controls">
@@ -364,7 +366,8 @@
             <option value="outerwear">Outerwear (coat/jacket)</option>
             <option value="shoes">Shoes</option>
             <option value="bag">Bag</option>
-            <option value="accessory">Accessory (scarf/jewelry)</option>
+            <option value="accessory">Accessory (scarf/belt/hat)</option>
+            <option value="jewelry">Jewelry (ring/necklace/bracelet/earring)</option>
           </optgroup>
         </select>
       </div>
@@ -498,13 +501,13 @@ const CAT_LABELS = {
   'formal-top':'Formal Top','formal-bottom':'Formal Bottom','formal-set':'Formal Set',
   'gala-dress':'Gala Dress','gala-top':'Gala Top',
   'casual-top':'Casual Top','casual-bottom':'Casual Bottom',
-  'outerwear':'Outerwear','shoes':'Shoes','bag':'Bag','accessory':'Accessory'
+  'outerwear':'Outerwear','shoes':'Shoes','bag':'Bag','accessory':'Accessory','jewelry':'Jewelry'
 };
 const CAT_TAG = {
   'formal-top':'formal','formal-bottom':'formal','formal-set':'formal',
   'gala-dress':'gala','gala-top':'gala',
   'casual-top':'casual','casual-bottom':'casual',
-  'outerwear':'casual','shoes':'shoes','bag':'acc','accessory':'acc'
+  'outerwear':'casual','shoes':'shoes','bag':'acc','accessory':'acc','jewelry':'jewelry'
 };
 
 let data = loadData();
@@ -710,7 +713,7 @@ async function autoTag() {
 {
   "name": "short descriptive name in English, e.g. 'Navy Silk Blouse', 'Black Stiletto Pumps'",
   "brand": "brand name if visible on the item (logo, label, tag, etc), otherwise empty string",
-  "category": "one of: formal-top, formal-bottom, formal-set, gala-dress, gala-top, casual-top, casual-bottom, outerwear, shoes, bag, accessory",
+  "category": "one of: formal-top, formal-bottom, formal-set, gala-dress, gala-top, casual-top, casual-bottom, outerwear, shoes, bag, accessory, jewelry",
   "color": "main color(s) in English",
   "season": "one of: spring, summer, autumn, winter, all",
   "wash": "one of: dry, hand, machine — based on typical care for this type of garment/material"
@@ -932,7 +935,7 @@ document.getElementById('pickerSearch').addEventListener('input',e=>renderPicker
 
 function renderPickerList(q) {
   q=q.toLowerCase();
-  const compatible={top:['formal-top','gala-top','casual-top','formal-set','gala-dress'],bottom:['formal-bottom','casual-bottom'],outer:['outerwear'],shoes:['shoes'],bag:['bag'],acc:['accessory']};
+  const compatible={top:['formal-top','gala-top','casual-top','formal-set','gala-dress'],bottom:['formal-bottom','casual-bottom'],outer:['outerwear'],shoes:['shoes'],bag:['bag'],acc:['accessory','jewelry']};
   const cats=compatible[pickerSlotType]||[];
   let items=data.items.filter(i=>{
     if(!cats.includes(i.category))return false;
